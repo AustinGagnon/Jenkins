@@ -9,6 +9,7 @@ pipeline {
                 sh " whoami "
                 sh """
                   npm init
+                  ls -la
                 """
 
             }
