@@ -6,6 +6,7 @@ pipeline {
             steps {
                 echo 'Building..'
                 sh " pwd "
+                sh " whoami "
                 sh """
                   npm init
                 """
