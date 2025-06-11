@@ -15,7 +15,7 @@ pipeline {
                 // This step clones your repository into the Jenkins workspace.
                 // The package.json file will then be available for the next stages.
                 git(
-                    url: 'https://github.com/your-username/your-repo.git', 
+                    url: 'https://github.com/AustinGagnon/Jenkins.git', 
                     branch: 'main'                                      
                 )
             }
