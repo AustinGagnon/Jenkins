@@ -7,7 +7,6 @@ pipeline {
         DOMAIN_OWNER = '590184143844'
         DOMAIN_NAME = 'test-domain'
         REPO_NAME = 'POC_Repo'
-        CHECKOUT_DIR = 'Jenkins'
     }
 
     
