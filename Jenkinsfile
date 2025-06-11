@@ -9,6 +9,18 @@ pipeline {
         REPO_NAME = 'POC_Repo'
     }
 
+    stage('Checkout Source Code') {
+            steps {
+                echo "Checking out code from repository..."
+                // This step clones your repository into the Jenkins workspace.
+                // The package.json file will then be available for the next stages.
+                git(
+                    url: 'https://github.com/your-username/your-repo.git', 
+                    branch: 'main'                                      
+                )
+            }
+        }
+
     stages {
         stage('Get CodeArtifact Token') {
             // This wrapper injects the AWS credentials as environment variables
