@@ -55,20 +55,20 @@ pipeline {
             }
         }
 
-        stage('Use the Token') {
-            steps {
-                script {
-                    if (env.CODEARTIFACT_AUTH_TOKEN) {
-                        sh 'echo "Successfully retrieved token and it is available in this stage!"'
-                        // You can now use the token
-                        // Example:
-                        sh "echo Token: ${env.CODEARTIFACT_AUTH_TOKEN}"
-                    } else {
-                        error "Failed to retrieve CodeArtifact token."
-                    }
-                }
-            }
-        }
+        // stage('Use the Token') {
+        //     steps {
+        //         script {
+        //             if (env.CODEARTIFACT_AUTH_TOKEN) {
+        //                 sh 'echo "Successfully retrieved token and it is available in this stage!"'
+        //                 // You can now use the token
+        //                 // Example:
+        //                 sh "echo Token: ${env.CODEARTIFACT_AUTH_TOKEN}"
+        //             } else {
+        //                 error "Failed to retrieve CodeArtifact token."
+        //             }
+        //         }
+        //     }
+        // }
 
         // stage('Configure npm') {
         //     steps {
