@@ -94,13 +94,15 @@ pipeline {
         stage('Build Project') {
             steps {
                 // Now that .npmrc is configured, you can run npm install
-                echo "Running npm install..."
+                timeout(time: 3, unit: 'MINUTES') {
+                    echo "Running npm install..."
                 // npm will automatically find and use the .npmrc file in the current directory
                 sh """
                     ls -la
                     npm cache clean --force
                     npm install --verbose
                 """
+                }                
             }
         }
     }
