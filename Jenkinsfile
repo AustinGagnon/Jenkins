@@ -31,19 +31,26 @@ pipeline {
             // for all the steps within this block.
             // Replace 'my-aws-credentials' with the ID you created in Jenkins.
             
+            // steps {
+            //     withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
+            //         script {
+            //             echo "AWS credentials configured. Fetching CodeArtifact token..."
+            //             // Now the aws command will be authenticated
+            //             env.CODEARTIFACT_AUTH_TOKEN = sh(
+            //                 script: "aws codeartifact get-authorization-token --domain ${env.DOMAIN_NAME} --domain-owner ${env.DOMAIN_OWNER} --query authorizationToken --output text",
+            //                 returnStdout: true
+            //             ).trim()
+                        
+            //             // You can also unset the sensitive AWS keys for the rest of the stage if you want.
+            //             // sh 'unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN'
+            //         }
+            //     }
+            // }
+            
             steps {
                 withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
-                    script {
-                        echo "AWS credentials configured. Fetching CodeArtifact token..."
-                        // Now the aws command will be authenticated
-                        env.CODEARTIFACT_AUTH_TOKEN = sh(
-                            script: "aws codeartifact get-authorization-token --domain ${env.DOMAIN_NAME} --domain-owner ${env.DOMAIN_OWNER} --query authorizationToken --output text",
-                            returnStdout: true
-                        ).trim()
-                        
-                        // You can also unset the sensitive AWS keys for the rest of the stage if you want.
-                        // sh 'unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN'
-                    }
+                    echo "AWS credentials configured. Fetching CodeArtifact token..."
+                    sh "aws codeartifact login --tool npm --repository ${REPO_NAME} --domain test-domain --domain-owner ${env.DOMAIN_OWNER} --region ${env.AWS_REGION}"
                 }
             }
         }
@@ -63,31 +70,31 @@ pipeline {
             }
         }
 
-        stage('Configure npm') {
-            steps {
-                script {
-                    // Construct the full registry URL.
-                    // Note the format: //domain-owner.d.codeartifact.region...
-                    def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
+        // stage('Configure npm') {
+        //     steps {
+        //         script {
+        //             // Construct the full registry URL.
+        //             // Note the format: //domain-owner.d.codeartifact.region...
+        //             def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
                     
-                    echo "Configuring .npmrc for registry: ${registryUrl}"
+        //             echo "Configuring .npmrc for registry: ${registryUrl}"
 
-                    // Use the writeFile step to create the .npmrc file in the workspace root.
-                    // This is cleaner than using 'sh' and 'echo'.
-                    writeFile(
-                        file: '.npmrc', // Creates the file in the root of the workspace
-                        text: """
-                            //${registryUrl}:always-auth=true
-                            //${registryUrl}:_authToken=${env.CODEARTIFACT_AUTH_TOKEN}
-                        """
-                    )
+        //             // Use the writeFile step to create the .npmrc file in the workspace root.
+        //             // This is cleaner than using 'sh' and 'echo'.
+        //             writeFile(
+        //                 file: '.npmrc', // Creates the file in the root of the workspace
+        //                 text: """
+        //                     //${registryUrl}:always-auth=true
+        //                     //${registryUrl}:_authToken=${env.CODEARTIFACT_AUTH_TOKEN}
+        //                 """
+        //             )
                     
-                    echo ".npmrc file created successfully."
-                    // Optional: You can print the file to the log to verify its contents, but be aware this exposes the registry URL.
-                    sh 'cat .npmrc'
-                }
-            }
-        }
+        //             echo ".npmrc file created successfully."
+        //             // Optional: You can print the file to the log to verify its contents, but be aware this exposes the registry URL.
+        //             sh 'cat .npmrc'
+        //         }
+        //     }
+        // }
 
         
 
