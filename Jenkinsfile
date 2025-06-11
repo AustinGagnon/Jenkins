@@ -8,6 +8,7 @@ pipeline {
                 sh " pwd "
                 sh " whoami "
                 sh """
+                  git --version
                   npm init
                   ls -la
                 """
