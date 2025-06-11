@@ -96,10 +96,10 @@ pipeline {
                 // Now that .npmrc is configured, you can run npm install
                 echo "Running npm install..."
                 // npm will automatically find and use the .npmrc file in the current directory
-                sh '''
+                sh """
                     cd ${env.CHECKOUT_DIR}
                     npm install
-                '''
+                """
             }
         }
     }
