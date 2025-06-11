@@ -25,12 +25,49 @@ pipeline {
                 )
             }
         }
+
+        stage('Init CodeArtifact Login') {
+            steps {
+                withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
+                    echo "AWS credentials configured. Fetching CodeArtifact token..."
+                    sh "aws codeartifact login --tool npm --repository ${REPO_NAME} --domain test-domain --domain-owner ${env.DOMAIN_OWNER} --region ${env.AWS_REGION}"
+                }
+            }
+        }
+
+        stage('Build Project') {
+            steps {
+                // Now that .npmrc is configured, you can run npm install
+                timeout(time: 3, unit: 'MINUTES') {
+                    echo "Running npm install..."
+                // npm will automatically find and use the .npmrc file in the current directory
+                sh """
+                    ls -la
+                    npm cache clean --force
+                    npm install --verbose
+                """
+                }                
+            }
+        }
         
-        stage('Get CodeArtifact Token') {
-            // This wrapper injects the AWS credentials as environment variables
-            // for all the steps within this block.
-            // Replace 'my-aws-credentials' with the ID you created in Jenkins.
-            
+        stage('Publish Packages') {
+            steps {
+                // Now that .npmrc is configured, you can run npm install
+                timeout(time: 3, unit: 'MINUTES') {
+                    echo "----++++ Publishing Packages ++++----"
+                // npm will automatically find and use the .npmrc file in the current directory
+                sh """
+                    npm publish
+                """
+                }                
+            }
+        }
+    }
+}
+
+
+        // MANUAL AUTH FOR CodeArtifact
+        // stage('Get CodeArtifact Token') {
             // steps {
             //     withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
             //         script {
@@ -46,14 +83,7 @@ pipeline {
             //         }
             //     }
             // }
-            
-            steps {
-                withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
-                    echo "AWS credentials configured. Fetching CodeArtifact token..."
-                    sh "aws codeartifact login --tool npm --repository ${REPO_NAME} --domain test-domain --domain-owner ${env.DOMAIN_OWNER} --region ${env.AWS_REGION}"
-                }
-            }
-        }
+        // }
 
         // stage('Use the Token') {
         //     steps {
@@ -73,14 +103,11 @@ pipeline {
         // stage('Configure npm') {
         //     steps {
         //         script {
-        //             // Construct the full registry URL.
-        //             // Note the format: //domain-owner.d.codeartifact.region...
         //             def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
                     
         //             echo "Configuring .npmrc for registry: ${registryUrl}"
 
         //             // Use the writeFile step to create the .npmrc file in the workspace root.
-        //             // This is cleaner than using 'sh' and 'echo'.
         //             writeFile(
         //                 file: '.npmrc', // Creates the file in the root of the workspace
         //                 text: """
@@ -90,39 +117,7 @@ pipeline {
         //             )
                     
         //             echo ".npmrc file created successfully."
-        //             // Optional: You can print the file to the log to verify its contents, but be aware this exposes the registry URL.
         //             sh 'cat .npmrc'
         //         }
         //     }
         // }
-
-        
-
-        stage('Build Project') {
-            steps {
-                // Now that .npmrc is configured, you can run npm install
-                timeout(time: 3, unit: 'MINUTES') {
-                    echo "Running npm install..."
-                // npm will automatically find and use the .npmrc file in the current directory
-                sh """
-                    ls -la
-                    npm cache clean --force
-                    npm install --verbose
-                """
-                }                
-            }
-        }
-        stage('Publish Packages') {
-            steps {
-                // Now that .npmrc is configured, you can run npm install
-                timeout(time: 3, unit: 'MINUTES') {
-                    echo "----++++ Publishing Packages ++++----"
-                // npm will automatically find and use the .npmrc file in the current directory
-                sh """
-                    npm publish
-                """
-                }                
-            }
-        }
-    }
-}
