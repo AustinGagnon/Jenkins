@@ -1,0 +1,18 @@
+{
+  "name": "jenkins-pipeline-test",
+  "version": "1.0.0",
+  "description": "A test project to verify Jenkins pipeline and CodeArtifact integration.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "author": "Jenkins Pipeline",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1"
+  }
+}
