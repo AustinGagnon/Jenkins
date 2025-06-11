@@ -17,8 +17,6 @@ pipeline {
         stage('Checkout Source Code') {
             steps {
                 echo "Checking out code from repository..."
-                // This step clones your repository into the Jenkins workspace.
-                // The package.json file will then be available for the next stages.
                 git(
                     url: 'https://github.com/AustinGagnon/Jenkins.git', 
                     branch: 'main'                                      
@@ -37,10 +35,8 @@ pipeline {
 
         stage('Build Project') {
             steps {
-                // Now that .npmrc is configured, you can run npm install
                 timeout(time: 3, unit: 'MINUTES') {
                     echo "Running npm install..."
-                // npm will automatically find and use the .npmrc file in the current directory
                 sh """
                     ls -la
                     npm cache clean --force
@@ -54,11 +50,29 @@ pipeline {
             steps {
                 // Now that .npmrc is configured, you can run npm install
                 timeout(time: 3, unit: 'MINUTES') {
-                    echo "----++++ Publishing Packages ++++----"
-                // npm will automatically find and use the .npmrc file in the current directory
-                sh """
-                    npm publish
-                """
+                    echo "----------------------------------------"
+                    echo "Preparing to publish package..."
+                    echo "Current Build Number: ${env.BUILD_NUMBER}"
+                    
+                    // 1. Show the version BEFORE updating
+                    echo "Version in package.json before update:"
+                    sh 'grep version package.json'
+                    
+                    // 2. Set a unique package version using the build number
+                    def newVersion = "1.0.${env.BUILD_NUMBER}"
+                    echo "Setting package version to ${newVersion}..."
+                    sh "npm version ${newVersion} --no-git-tag-version"
+                    
+                    // 3. Show the version AFTER updating to confirm it worked
+                    echo "Version in package.json after update:"
+                    sh 'grep version package.json'
+        
+                    // 4. Publish the package to CodeArtifact
+                    echo "Publishing package..."
+                    sh 'npm publish'
+        
+                    echo "Package successfully published!"
+                    echo "----------------------------------------"
                 }                
             }
         }
