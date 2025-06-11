@@ -59,8 +59,9 @@ pipeline {
                     sh 'grep version package.json'
                     
                     // 2. Set a unique package version using the build number
-                    def newVersion = "1.0.${env.BUILD_NUMBER}"
-                    echo "Setting package version to ${newVersion}..."
+                    env.NEW_VERSION = "1.0.${env.BUILD_NUMBER}"
+                    
+                    echo "Setting package version to ${env.NEW_VERSION}..."
                     sh "npm version ${newVersion} --no-git-tag-version"
                     
                     // 3. Show the version AFTER updating to confirm it worked
