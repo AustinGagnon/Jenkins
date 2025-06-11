@@ -1,0 +1,97 @@
+pipeline {
+    agent any
+
+    environment {
+        // --- User Configuration ---
+        AWS_REGION   = 'us-east-2'
+        DOMAIN_OWNER = '590184143844' // Your AWS Account ID
+        DOMAIN_NAME  = 'test-domain'    // Your CodeArtifact Domain
+        REPO_NAME    = 'my-maven-repo' // ** IMPORTANT: Your MAVEN repository name **
+    }
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                echo "Checking out code from repository..."
+                // ** IMPORTANT: Replace with your Maven project's Git URL **
+                git(
+                    url: 'https://github.com/your-username/your-maven-project.git', 
+                    branch: 'main'
+                )
+
+                // Verify pom.xml is in the root
+                echo "Listing workspace contents:"
+                sh 'ls -l'
+            }
+        }
+
+        stage('Configure Maven Settings') {
+            steps {
+                withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
+                    script {
+                        echo "Fetching CodeArtifact token for Maven..."
+                        // Fetch the token from AWS
+                        def codeArtifactToken = sh(
+                            script: "aws codeartifact get-authorization-token --domain ${env.DOMAIN_NAME} --domain-owner ${env.DOMAIN_OWNER} --query authorizationToken --output text",
+                            returnStdout: true
+                        ).trim()
+
+                        // Dynamically create the settings.xml file
+                        // This file tells Maven to use your CodeArtifact repo and authenticates with the token.
+                        echo "Writing settings.xml..."
+                        writeFile(
+                            file: 'settings.xml',
+                            text: """
+                            <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                                  https://maven.apache.org/xsd/settings-1.0.0.xsd">
+                              <servers>
+                                <server>
+                                  <id>codeartifact</id>
+                                  <username>aws</username>
+                                  <password>${codeArtifactToken}</password>
+                                </server>
+                              </servers>
+                              <profiles>
+                                <profile>
+                                  <id>codeartifact</id>
+                                  <repositories>
+                                    <repository>
+                                      <id>codeartifact</id>
+                                      <url>https://${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/maven/${env.REPO_NAME}/</url>
+                                    </repository>
+                                  </repositories>
+                                </profile>
+                              </profiles>
+                              <activeProfiles>
+                                <activeProfile>codeartifact</activeProfile>
+                              </activeProfiles>
+                            </settings>
+                            """
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Build and Publish') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    // This is the version that will be applied to your pom.xml and artifact
+                    def newVersion = "1.0.${env.BUILD_NUMBER}"
+                    echo "Preparing to build and deploy version: ${newVersion}"
+                    
+                    // Run the Maven deploy command
+                    // -s settings.xml: Tells Maven to use our dynamically generated settings file.
+                    // -Drevision=...: Sets the project version dynamically.
+                    // deploy: Runs all steps through packaging and uploads the artifact.
+                    sh "mvn -s settings.xml -Drevision=${newVersion} deploy"
+
+                    echo "Artifact successfully deployed to CodeArtifact!"
+                }
+            }
+        }
+    }
+}
