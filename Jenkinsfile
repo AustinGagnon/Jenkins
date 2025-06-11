@@ -13,8 +13,9 @@ pipeline {
             // This wrapper injects the AWS credentials as environment variables
             // for all the steps within this block.
             // Replace 'my-aws-credentials' with the ID you created in Jenkins.
-            withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
-                steps {
+            
+            steps {
+                withAWS(credentials: 'my-aws-credentials', region: env.AWS_REGION) {
                     script {
                         echo "AWS credentials configured. Fetching CodeArtifact token..."
                         // Now the aws command will be authenticated
