@@ -41,6 +41,7 @@ pipeline {
                     
                     // Step 1: Install dependencies using the configured .npmrc
                     echo "Running npm install..."
+                    sh 'npm cache clean --force'
                     sh 'npm install --verbose'
 
                     // Step 2: Set a unique package version using the build number
