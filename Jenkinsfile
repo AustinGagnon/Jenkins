@@ -49,31 +49,24 @@ pipeline {
         stage('Publish Packages') {
             steps {
                 // Now that .npmrc is configured, you can run npm install
-                timeout(time: 3, unit: 'MINUTES') {
-                    echo "----------------------------------------"
-                    echo "Preparing to publish package..."
-                    echo "Current Build Number: ${env.BUILD_NUMBER}"
+                script {
+                    // Configure .npmrc
+                    def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
+                    echo "Configuring .npmrc for registry: ${registryUrl}"
+                    writeFile(file: '.npmrc', text: "...") // Content omitted
+    
+                    // Install dependencies
+                    echo "Running npm install..."
+                    sh 'npm install'
+    
+                    // Now 'def' is valid because it's inside a script block
+                    def newVersion = "1.0.${env.BUILD_NUMBER}"
+                    echo "Setting package version to ${newVersion}..."
                     
-                    // 1. Show the version BEFORE updating
-                    echo "Version in package.json before update:"
-                    sh 'grep version package.json'
-                    
-                    // 2. Set a unique package version using the build number
-                    env.NEW_VERSION = "1.0.${env.BUILD_NUMBER}"
-                    
-                    echo "Setting package version to ${env.NEW_VERSION}..."
                     sh "npm version ${newVersion} --no-git-tag-version"
                     
-                    // 3. Show the version AFTER updating to confirm it worked
-                    echo "Version in package.json after update:"
-                    sh 'grep version package.json'
-        
-                    // 4. Publish the package to CodeArtifact
                     echo "Publishing package..."
                     sh 'npm publish'
-        
-                    echo "Package successfully published!"
-                    echo "----------------------------------------"
                 }                
             }
         }
