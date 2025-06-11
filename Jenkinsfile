@@ -33,41 +33,24 @@ pipeline {
             }
         }
 
-        stage('Build Project') {
+        stage('Build and Publish') {
             steps {
-                timeout(time: 3, unit: 'MINUTES') {
-                    echo "Running npm install..."
-                sh """
-                    ls -la
-                    npm cache clean --force
-                    npm install --verbose
-                """
-                }                
-            }
-        }
-        
-        stage('Publish Packages') {
-            steps {
-                // Now that .npmrc is configured, you can run npm install
-                script {
-                    // Configure .npmrc
-                    def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
-                    echo "Configuring .npmrc for registry: ${registryUrl}"
-                    writeFile(file: '.npmrc', text: "...") // Content omitted
-    
-                    // Install dependencies
-                    echo "Running npm install..."
-                    sh 'npm install'
-    
-                    // Now 'def' is valid because it's inside a script block
-                    def newVersion = "1.0.${env.BUILD_NUMBER}"
-                    echo "Setting package version to ${newVersion}..."
+                // No 'dir()' block is needed since package.json is in the root
+                timeout(time: 5, unit: 'MINUTES') {
+                    echo "Running commands in workspace root: ${pwd()}"
                     
-                    sh "npm version ${newVersion} --no-git-tag-version"
-                    
+                    // Step 1: Install dependencies using the configured .npmrc
+                    echo "Running npm install..."
+                    sh 'npm install --verbose'
+
+                    // Step 2: Set a unique package version using the build number
+                    echo "Setting package version to 1.0.${env.BUILD_NUMBER}"
+                    sh "npm version 1.0.${env.BUILD_NUMBER} --no-git-tag-version"
+
+                    // Step 3: Publish the newly versioned package
                     echo "Publishing package..."
                     sh 'npm publish'
-                }                
+                }
             }
         }
     }
