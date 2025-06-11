@@ -6,6 +6,7 @@ pipeline {
         AWS_REGION = 'us-east-2'
         DOMAIN_OWNER = '590184143844'
         DOMAIN_NAME = 'test-domain'
+        REPO_NAME = 'POC_Repo;
     }
 
     stages {
@@ -31,6 +32,32 @@ pipeline {
             }
         }
 
+        stage('Configure npm') {
+            steps {
+                script {
+                    // Construct the full registry URL.
+                    // Note the format: //domain-owner.d.codeartifact.region...
+                    def registryUrl = "${env.DOMAIN_NAME}-${env.DOMAIN_OWNER}.d.codeartifact.${env.AWS_REGION}.amazonaws.com/npm/${env.REPO_NAME}/"
+                    
+                    echo "Configuring .npmrc for registry: ${registryUrl}"
+
+                    // Use the writeFile step to create the .npmrc file in the workspace root.
+                    // This is cleaner than using 'sh' and 'echo'.
+                    writeFile(
+                        file: '.npmrc', // Creates the file in the root of the workspace
+                        text: """
+                            //${registryUrl}:always-auth=true
+                            //${registryUrl}:_authToken=${env.CODEARTIFACT_AUTH_TOKEN}
+                        """
+                    )
+                    
+                    echo ".npmrc file created successfully."
+                    // Optional: You can print the file to the log to verify its contents, but be aware this exposes the registry URL.
+                    sh 'cat .npmrc'
+                }
+            }
+        }
+
         stage('Use the Token') {
             steps {
                 script {
@@ -43,6 +70,15 @@ pipeline {
                         error "Failed to retrieve CodeArtifact token."
                     }
                 }
+            }
+        }
+
+        stage('Build Project') {
+            steps {
+                // Now that .npmrc is configured, you can run npm install
+                echo "Running npm install..."
+                // npm will automatically find and use the .npmrc file in the current directory
+                sh 'npm install'
             }
         }
     }
