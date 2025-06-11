@@ -105,5 +105,17 @@ pipeline {
                 }                
             }
         }
+        stage('Publish Packages') {
+            steps {
+                // Now that .npmrc is configured, you can run npm install
+                timeout(time: 3, unit: 'MINUTES') {
+                    echo "----++++ Publishing Packages ++++----"
+                // npm will automatically find and use the .npmrc file in the current directory
+                sh """
+                    npm publish
+                """
+                }                
+            }
+        }
     }
 }
