@@ -7,6 +7,7 @@ pipeline {
         DOMAIN_OWNER = '590184143844'
         DOMAIN_NAME = 'test-domain'
         REPO_NAME = 'POC_Repo'
+        CHECKOUT_DIR = 'Jenkins'
     }
 
     
@@ -95,6 +96,7 @@ pipeline {
                 // Now that .npmrc is configured, you can run npm install
                 echo "Running npm install..."
                 // npm will automatically find and use the .npmrc file in the current directory
+                cd ${env.CHECKOUT_DIR}
                 sh 'npm install'
             }
         }
