@@ -6,7 +6,7 @@ pipeline {
         AWS_REGION = 'us-east-2'
         DOMAIN_OWNER = '590184143844'
         DOMAIN_NAME = 'test-domain'
-        REPO_NAME = 'POC_Repo;
+        REPO_NAME = 'POC_Repo'
     }
 
     stages {
