@@ -98,7 +98,6 @@ pipeline {
                 // npm will automatically find and use the .npmrc file in the current directory
                 sh """
                     ls -la
-                    cd ${env.CHECKOUT_DIR}
                     npm install
                 """
             }
