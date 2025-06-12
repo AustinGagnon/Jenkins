@@ -49,6 +49,7 @@ pipeline {
 
                     // Step 3: Publish the newly versioned package
                     echo "Publishing package..."
+                    sh 'cat package.json'
                     sh 'npm publish'
                 }
             }
